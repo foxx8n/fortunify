@@ -11,6 +11,8 @@ import {
 import { styled } from '@mui/material/styles';
 import ReactCrop, { Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../translations';
 
 const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
   display: 'flex',
@@ -36,6 +38,8 @@ const ImagePreviewDialog: React.FC<ImagePreviewDialogProps> = ({
   imageUrl,
   onConfirm,
 }) => {
+  const { language } = useLanguage();
+  const t = translations[language];
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
     width: 100,
@@ -66,7 +70,7 @@ const ImagePreviewDialog: React.FC<ImagePreviewDialogProps> = ({
         },
       }}
     >
-      <DialogTitle>Preview & Crop Image</DialogTitle>
+      <DialogTitle>{t.ui.imagePreview}</DialogTitle>
       <StyledDialogContent>
         <ReactCrop
           crop={crop}
@@ -80,13 +84,13 @@ const ImagePreviewDialog: React.FC<ImagePreviewDialogProps> = ({
           />
         </ReactCrop>
         <Typography variant="caption" color="text.secondary">
-          Drag to crop the image or click confirm to keep it as is
+          {t.ui.imagePreviewHint}
         </Typography>
       </StyledDialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t.ui.cancel}</Button>
         <Button onClick={handleConfirm} variant="contained" color="primary">
-          Confirm
+          {t.ui.confirm}
         </Button>
       </DialogActions>
     </Dialog>

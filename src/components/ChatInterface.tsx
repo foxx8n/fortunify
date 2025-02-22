@@ -17,6 +17,10 @@ import ImageIcon from '@mui/icons-material/Image';
 import { compressImage, createImagePreview } from '../utils/imageUtils';
 import ImagePreviewDialog from './ImagePreviewDialog';
 import { Crop } from 'react-image-crop';
+import { analyzeImage, getFortuneTelling } from '../utils/aiService';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../translations';
+import { alpha } from '@mui/material/styles';
 
 const ChatContainer = styled(Box)(({ theme }) => ({
   height: '100vh',
@@ -60,40 +64,47 @@ const ImageContainer = styled(Box)(({ theme }) => ({
   },
 }));
 
-const MessageBubble = styled(Paper, {
-  shouldForwardProp: (prop) => prop !== 'isUser',
-})<{ isUser: boolean }>(({ theme, isUser }) => ({
+const MessageWrapper = styled(motion.div)<{ isUser: boolean }>(({ isUser }) => ({
+  width: '100%',
+  display: 'flex',
+  justifyContent: isUser ? 'flex-end' : 'flex-start',
+  alignItems: 'flex-end',
+}));
+
+const MessageBubble = styled(Paper)<{ isUser: boolean }>(({ theme, isUser }) => ({
   padding: theme.spacing(2),
   maxWidth: '70%',
-  position: 'relative',
-  alignSelf: isUser ? 'flex-end' : 'flex-start',
-  backgroundColor: isUser
-    ? theme.palette.primary.main
-    : theme.palette.background.paper,
+  width: 'fit-content',
+  marginBottom: theme.spacing(1),
+  backgroundColor: isUser ? theme.palette.primary.main : theme.palette.mode === 'dark' ? 'rgba(18, 18, 24, 0.8)' : 'rgba(255, 255, 255, 0.8)',
   color: isUser ? theme.palette.primary.contrastText : theme.palette.text.primary,
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: '100%',
-    background: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 'inherit',
-    opacity: 0,
-    transition: 'opacity 0.3s ease',
-  },
-  '&:hover::before': {
-    opacity: 1,
-  },
+  borderRadius: '20px',
+  boxShadow: isUser 
+    ? `0 0 20px ${alpha(theme.palette.primary.main, 0.4)}, inset 0 0 10px ${alpha(theme.palette.primary.light, 0.3)}`
+    : theme.palette.mode === 'dark'
+      ? `0 0 20px ${alpha('#FFB703', 0.1)}, inset 0 0 10px ${alpha('#FFB703', 0.05)}`
+      : `0 0 20px ${alpha(theme.palette.primary.main, 0.1)}, inset 0 0 10px ${alpha(theme.palette.primary.light, 0.05)}`,
+  backdropFilter: 'blur(10px)',
+  border: 'none',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    boxShadow: isUser 
+      ? `0 0 30px ${alpha(theme.palette.primary.main, 0.5)}, inset 0 0 20px ${alpha(theme.palette.primary.light, 0.4)}`
+      : theme.palette.mode === 'dark'
+        ? `0 0 25px ${alpha('#FFB703', 0.15)}, inset 0 0 15px ${alpha('#FFB703', 0.08)}`
+        : `0 0 25px ${alpha(theme.palette.primary.main, 0.15)}, inset 0 0 15px ${alpha(theme.palette.primary.light, 0.08)}`
+  }
 }));
 
 const InputContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2, 3),
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 24, 0.8)' : 'rgba(255, 255, 255, 0.8)',
   position: 'relative',
   zIndex: 1,
   borderRadius: theme.shape.borderRadius * 2,
   marginBottom: theme.spacing(2),
+  backdropFilter: 'blur(10px)',
+  border: 'none'
 }));
 
 const MethodHeader = styled(Box)(({ theme }) => ({
@@ -102,28 +113,21 @@ const MethodHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(2),
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 24, 0.8)' : 'rgba(255, 255, 255, 0.8)',
   position: 'relative',
   zIndex: 2,
   borderRadius: theme.shape.borderRadius * 2,
   marginTop: theme.spacing(2),
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '1px',
-    background: mysticalGradients.border(theme.palette.mode),
-  },
+  backdropFilter: 'blur(10px)',
+  border: 'none'
 }));
 
 interface ChatInterfaceProps {
   messages: Message[];
   method: FortuneMethod;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string, sender?: 'user' | 'fortune-teller') => void;
   onUploadImage?: (file: File) => void;
+  sessionId: string;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -131,20 +135,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   method,
   onSendMessage,
   onUploadImage,
+  sessionId,
 }) => {
-  console.log('ChatInterface render - method:', method);
-  console.log('ChatInterface render - messages:', messages);
+  const { language } = useLanguage();
+  const t = translations[language];
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   
+  // Scroll to bottom when new messages arrive
+  React.useEffect(() => {
+    if (messagesContainerRef.current && messages.length > 0) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages.length]);
+
   const [input, setInput] = useState('');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (input.trim()) {
-      console.log('Sending message:', input.trim());
-      onSendMessage(input.trim());
+      const message = input.trim();
       setInput('');
+      console.log('Sending message:', message);
+      onSendMessage(message);
+      
+      try {
+        const response = await getFortuneTelling(message, method.id, language, sessionId);
+        onSendMessage(response, 'fortune-teller');
+      } catch (error) {
+        console.error('Failed to get fortune telling:', error);
+        onSendMessage(t.chat.readingError, 'fortune-teller');
+      }
     }
   };
 
@@ -181,11 +203,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         type: 'image/jpeg',
       });
 
+      // Create a temporary URL for the compressed image
+      const imageUrl = URL.createObjectURL(compressedBlob);
+
+      // Get AI analysis of the image based on the method
+      const analysis = await analyzeImage(imageUrl, method.id, language);
+
+      // Create messages for both the image and the AI's response
       if (onUploadImage) {
         onUploadImage(compressedFile);
       }
+
+      // Add the AI's response
+      onSendMessage(analysis, 'fortune-teller');
+
+      // Clean up the temporary URL
+      URL.revokeObjectURL(imageUrl);
     } catch (error) {
       console.error('Failed to process image:', error);
+      onSendMessage(t.chat.imageError, 'fortune-teller');
     }
 
     setPreviewImage(null);
@@ -210,11 +246,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </Typography>
         </Box>
       </MethodHeader>
-      <MessagesContainer>
+      <MessagesContainer ref={messagesContainerRef}>
         <AnimatePresence>
           {messages.map((message) => (
-            <motion.div
+            <MessageWrapper
               key={message.id}
+              isUser={message.sender === 'user'}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -234,7 +271,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </ImageContainer>
                 )}
               </MessageBubble>
-            </motion.div>
+            </MessageWrapper>
           ))}
         </AnimatePresence>
       </MessagesContainer>
@@ -247,7 +284,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={`Ask the ${method.name.toLowerCase()} fortune teller...`}
+            placeholder={t.chat.placeholder.replace('{method}', method.name)}
             variant="outlined"
             size="small"
             sx={{

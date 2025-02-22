@@ -15,23 +15,49 @@ import {
   DialogActions,
   Button,
   Drawer,
+  Menu,
+  MenuItem,
+  Collapse,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
+import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LanguageIcon from '@mui/icons-material/Language';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 import * as Icons from '@mui/icons-material';
 import { ChatSession } from '../types/chat';
 import { motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../translations';
+import { alpha } from '@mui/material/styles';
+import ReactCountryFlag from 'react-country-flag';
 
 const SidebarContainer = styled(Box)(({ theme }) => ({
   width: 280,
   height: '100vh',
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.palette.mode === 'dark' ? 'rgb(18, 18, 24)' : 'rgb(255, 255, 255)',
   display: 'flex',
   flexDirection: 'column',
+  border: 'none',
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: theme.palette.mode === 'dark' 
+      ? 'linear-gradient(135deg, rgba(123, 44, 191, 0.1) 0%, rgba(0, 0, 0, 0) 100%)'
+      : 'linear-gradient(135deg, rgba(123, 44, 191, 0.05) 0%, rgba(255, 255, 255, 0) 100%)',
+    pointerEvents: 'none',
+  }
 }));
 
 const Header = styled(Box)(({ theme }) => ({
@@ -46,8 +72,19 @@ const MotionListItemButton = motion(ListItemButton);
 const SessionItem = styled(MotionListItemButton)(({ theme }) => ({
   marginBottom: theme.spacing(1),
   borderRadius: theme.shape.borderRadius,
+  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(123, 44, 191, 0.1)' : 'rgba(123, 44, 191, 0.05)',
+  backdropFilter: 'blur(5px)',
+  transition: 'all 0.2s ease-in-out',
   '&:hover': {
-    backgroundColor: theme.palette.action.hover,
+    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(123, 44, 191, 0.2)' : 'rgba(123, 44, 191, 0.1)',
+    boxShadow: `0 0 20px ${alpha(theme.palette.primary.main, 0.2)}`,
+  },
+  '&.Mui-selected': {
+    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(123, 44, 191, 0.3)' : 'rgba(123, 44, 191, 0.15)',
+    boxShadow: `0 0 20px ${alpha(theme.palette.primary.main, 0.3)}`,
+    '&:hover': {
+      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(123, 44, 191, 0.35)' : 'rgba(123, 44, 191, 0.2)',
+    },
   },
 }));
 
@@ -73,8 +110,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   onClose,
 }) => {
   const { mode, toggleColorMode } = useTheme();
+  const { language, setLanguage } = useLanguage();
+  const t = translations[language];
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   console.log('Sidebar render - sessions:', sessions);
   console.log('Sidebar render - currentSessionId:', currentSessionId);
@@ -108,6 +148,10 @@ const Sidebar: React.FC<SidebarProps> = ({
     setConfirmDeleteAll(false);
   };
 
+  const handleLanguageChange = (newLang: 'en' | 'tr') => {
+    setLanguage(newLang);
+  };
+
   return (
     <Drawer
       anchor="left"
@@ -118,19 +162,39 @@ const Sidebar: React.FC<SidebarProps> = ({
         sx: {
           width: 280,
           border: 'none',
-          boxShadow: 3,
+          boxShadow: 'none',
+          backgroundColor: 'transparent',
+          backgroundImage: 'none',
+          '& > *': {
+            backdropFilter: 'blur(20px)',
+          }
         },
+      }}
+      ModalProps={{
+        sx: {
+          '& .MuiBackdrop-root': {
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px)',
+          }
+        }
+      }}
+      sx={{
+        '& .MuiDrawer-paper': {
+          backgroundColor: 'transparent',
+        }
       }}
     >
       <SidebarContainer>
         <Header>
-          <Typography variant="h6" component="h1">
-            Fortunify
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton onClick={toggleColorMode} color="primary" size="small">
-              {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton onClick={onClose} size="small">
+              <MenuIcon />
             </IconButton>
+            <Typography variant="h6" component="h1">
+              Fortunify
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <IconButton onClick={() => setConfirmDeleteAll(true)} color="primary" size="small">
               <DeleteIcon />
             </IconButton>
@@ -183,18 +247,53 @@ const Sidebar: React.FC<SidebarProps> = ({
           ))}
         </List>
 
+        <Divider />
+        <List>
+          <ListItemButton onClick={() => setSettingsOpen(!settingsOpen)}>
+            <ListItemIcon>
+              <SettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary={t.ui.settings} />
+            {settingsOpen ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+          <Collapse in={settingsOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              <ListItemButton 
+                sx={{ pl: 4 }}
+                onClick={toggleColorMode}
+              >
+                <ListItemIcon>
+                  {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+                </ListItemIcon>
+                <ListItemText primary={mode === 'dark' ? t.ui.lightMode : t.ui.darkMode} />
+              </ListItemButton>
+              <ListItemButton 
+                sx={{ pl: 4 }}
+                onClick={() => handleLanguageChange(language === 'en' ? 'tr' : 'en')}
+              >
+                <ListItemIcon>
+                  <LanguageIcon />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={language === 'en' ? 'Türkçe' : 'English'}
+                />
+              </ListItemButton>
+            </List>
+          </Collapse>
+        </List>
+
         {/* Delete Single Session Dialog */}
         <Dialog
           open={!!sessionToDelete}
           onClose={() => setSessionToDelete(null)}
         >
-          <DialogTitle>Delete Session</DialogTitle>
+          <DialogTitle>{t.ui.deleteSession}</DialogTitle>
           <DialogContent>
-            <Typography>Are you sure you want to delete this session?</Typography>
+            <Typography>{t.ui.confirmDelete}</Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setSessionToDelete(null)}>Cancel</Button>
-            <Button onClick={handleConfirmDelete} color="error">Delete</Button>
+            <Button onClick={() => setSessionToDelete(null)}>{t.ui.cancel}</Button>
+            <Button onClick={handleConfirmDelete} color="error">{t.ui.delete}</Button>
           </DialogActions>
         </Dialog>
 
@@ -203,13 +302,13 @@ const Sidebar: React.FC<SidebarProps> = ({
           open={confirmDeleteAll}
           onClose={() => setConfirmDeleteAll(false)}
         >
-          <DialogTitle>Delete All Sessions</DialogTitle>
+          <DialogTitle>{t.ui.deleteAll}</DialogTitle>
           <DialogContent>
-            <Typography>Are you sure you want to delete all sessions? This action cannot be undone.</Typography>
+            <Typography>{t.ui.confirmDeleteAll}</Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setConfirmDeleteAll(false)}>Cancel</Button>
-            <Button onClick={handleConfirmDeleteAll} color="error">Delete All</Button>
+            <Button onClick={() => setConfirmDeleteAll(false)}>{t.ui.cancel}</Button>
+            <Button onClick={handleConfirmDeleteAll} color="error">{t.ui.deleteAllButton}</Button>
           </DialogActions>
         </Dialog>
       </SidebarContainer>
