@@ -89,7 +89,7 @@ const getImagePrompt = (method: string, language: string = 'en') => {
       palm: "Study this image as if reading a palm. What life lines, fate patterns, and fortune indicators do you observe? If the image contains inappropriate or adult content, respond with 'I must respectfully decline to read this image.'",
       astrology: "Analyze this image through an astrological lens. What celestial connections and cosmic meanings do you perceive? If the image contains inappropriate or adult content, respond with 'The stars veil themselves from this image.'",
       runes: "Interpret this image using Norse runic wisdom. What ancient symbols and meanings do you discover? If the image contains inappropriate or adult content, respond with 'The runes refuse to speak of this image.'",
-      coffee: "Read this image as if interpreting Turkish coffee grounds. What symbols and fortunes do you see in the patterns? If the image contains inappropriate or adult content, respond with 'The coffee grounds blur for this image.'",
+      coffee: "Analyze this coffee-related image. If it shows Turkish coffee grounds (telve), interpret the patterns and symbols. If it's another type of coffee (like latte art), describe what you see and provide a mystical interpretation of the patterns. Share your insights in 2-3 sentences.",
     },
     tr: {
       tarot: "Bu görseli tarot sembolleri ve desenleri açısından incele. Görsel öğeler tarot perspektifinden nasıl bir hikaye anlatıyor? Eğer görsel uygunsuz veya yetişkin içeriği barındırıyorsa, 'Bu görseli okumayı saygıyla reddetmek durumundayım.' şeklinde yanıt ver.",
@@ -97,7 +97,7 @@ const getImagePrompt = (method: string, language: string = 'en') => {
       palm: "Bu görseli bir el falı okuyormuş gibi incele. Hangi yaşam çizgilerini, kader desenlerini ve şans göstergelerini gözlemliyorsun? Eğer görsel uygunsuz veya yetişkin içeriği barındırıyorsa, 'Bu görseli okumayı saygıyla reddetmek durumundayım.' şeklinde yanıt ver.",
       astrology: "Bu görseli astrolojik bir bakış açısıyla analiz et. Hangi göksel bağlantıları ve kozmik anlamları algılıyorsun? Eğer görsel uygunsuz veya yetişkin içeriği barındırıyorsa, 'Yıldızlar bu görsel için kendilerini gizliyorlar.' şeklinde yanıt ver.",
       runes: "Bu görseli İskandinav run bilgeliğini kullanarak yorumla. Hangi kadim sembolleri ve anlamları keşfediyorsun? Eğer görsel uygunsuz veya yetişkin içeriği barındırıyorsa, 'Runlar bu görsel hakkında konuşmayı reddediyor.' şeklinde yanıt ver.",
-      coffee: "Bu görseli Türk kahvesi telvesi yorumluyormuş gibi oku. Desenlerde hangi sembolleri ve kehanetleri görüyorsun? Eğer görsel uygunsuz veya yetişkin içeriği barındırıyorsa, 'Telve bu görsel için bulanıklaşıyor.' şeklinde yanıt ver.",
+      coffee: "Bu kahve görselini analiz et. Eğer Türk kahvesi telvesi görüyorsan, şekilleri ve sembolleri yorumla. Eğer başka bir kahve türüyse (latte art gibi), gördüğün desenleri mistik bir şekilde yorumla. Yorumunu 2-3 cümleyle paylaş.",
     }
   };
   return prompts[language as keyof typeof prompts][method as keyof typeof prompts.en] || prompts[language as keyof typeof prompts].crystal;

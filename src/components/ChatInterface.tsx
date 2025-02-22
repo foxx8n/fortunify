@@ -54,14 +54,17 @@ const MessagesContainer = styled(Box)(({ theme }) => ({
 }));
 
 const ImageContainer = styled(Box)(({ theme }) => ({
-  maxWidth: '60%',
+  maxWidth: '100%',
   borderRadius: theme.shape.borderRadius,
   overflow: 'hidden',
+  marginTop: theme.spacing(2),
+  boxShadow: `0 4px 20px ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)'}`,
   '& img': {
-    maxWidth: '100%',
+    width: '100%',
     height: 'auto',
     display: 'block',
-  },
+    objectFit: 'cover',
+  }
 }));
 
 const MessageWrapper = styled(motion.div)<{ isUser: boolean }>(({ isUser }) => ({
@@ -265,7 +268,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       src={message.image.url}
                       alt="Uploaded"
                       style={{
-                        aspectRatio: `${message.image.width} / ${message.image.height}`,
+                        maxHeight: '300px',
+                        objectFit: 'cover',
+                        width: '100%',
                       }}
                     />
                   </ImageContainer>
