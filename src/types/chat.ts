@@ -10,6 +10,11 @@ export interface Message {
   content: string;
   sender: 'user' | 'fortune-teller';
   timestamp: Date;
+  image?: {
+    url: string;
+    width: number;
+    height: number;
+  };
 }
 
 export interface ChatSession {

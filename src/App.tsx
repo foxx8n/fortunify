@@ -134,16 +134,19 @@ const ThemedApp = () => {
                 sx={{
                   position: 'absolute',
                   top: 8,
-                  left: isSidebarOpen ? 288 : 8, // 280px (sidebar width) + 8px
+                  left: isSidebarOpen ? 288 : 8,
                   zIndex: 1200,
                   backgroundColor: 'background.paper',
                   boxShadow: 1,
-                  transition: 'left 0.3s ease',
+                  transition: 'all 0.3s ease',
                   transform: isSidebarOpen ? 'rotate(180deg)' : 'none',
+                  width: 40,
+                  height: 40,
                   '&:hover': {
                     backgroundColor: 'background.paper',
                   },
                 }}
+                color="primary"
               >
                 <MenuIcon />
               </IconButton>
@@ -168,6 +171,8 @@ const ThemedApp = () => {
                 gap: 2,
                 position: 'relative',
                 zIndex: 0,
+                pl: '30%',
+                pr: '30%',
               }}
             >
               <IconButton
@@ -175,16 +180,19 @@ const ThemedApp = () => {
                 sx={{
                   position: 'absolute',
                   top: 8,
-                  left: isSidebarOpen ? 288 : 8, // 280px (sidebar width) + 8px
+                  left: isSidebarOpen ? 288 : 8,
                   zIndex: 1200,
                   backgroundColor: 'background.paper',
                   boxShadow: 1,
-                  transition: 'left 0.3s ease',
+                  transition: 'all 0.3s ease',
                   transform: isSidebarOpen ? 'rotate(180deg)' : 'none',
+                  width: 40,
+                  height: 40,
                   '&:hover': {
                     backgroundColor: 'background.paper',
                   },
                 }}
+                color="primary"
               >
                 <MenuIcon />
               </IconButton>
