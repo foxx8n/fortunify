@@ -6,7 +6,6 @@ import {
   IconButton,
   Paper,
   Typography,
-  Avatar,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import * as Icons from '@mui/icons-material';
@@ -17,10 +16,11 @@ import ImageIcon from '@mui/icons-material/Image';
 import { compressImage, createImagePreview } from '../utils/imageUtils';
 import ImagePreviewDialog from './ImagePreviewDialog';
 import { Crop } from 'react-image-crop';
-import { analyzeImage, getFortuneTelling } from '../utils/aiService';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
 import { alpha } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
+import { TarotSpreadType } from '../types/tarot';
 
 const ChatContainer = styled(Box)(({ theme }) => ({
   height: '100vh',
@@ -67,22 +67,53 @@ const ImageContainer = styled(Box)(({ theme }) => ({
   }
 }));
 
-const MessageWrapper = styled(motion.div)<{ isUser: boolean }>(({ isUser }) => ({
+interface StyledMessageWrapperProps {
+  ownerState: {
+    isUser: boolean;
+  };
+}
+
+const StyledMessageWrapper = styled(motion.div, {
+  shouldForwardProp: (prop) => prop !== 'ownerState'
+})<StyledMessageWrapperProps>(({ ownerState }) => ({
   width: '100%',
   display: 'flex',
-  justifyContent: isUser ? 'flex-end' : 'flex-start',
+  justifyContent: ownerState.isUser ? 'flex-end' : 'flex-start',
   alignItems: 'flex-end',
 }));
 
-const MessageBubble = styled(Paper)<{ isUser: boolean }>(({ theme, isUser }) => ({
+interface MessageWrapperProps {
+  isUser: boolean;
+  children: React.ReactNode;
+  initial?: any;
+  animate?: any;
+  exit?: any;
+  transition?: any;
+}
+
+const CustomMessageWrapper: React.FC<MessageWrapperProps> = ({ isUser, children, ...motionProps }) => (
+  <StyledMessageWrapper ownerState={{ isUser }} {...motionProps}>
+    {children}
+  </StyledMessageWrapper>
+);
+
+interface StyledMessageBubbleProps {
+  ownerState: {
+    isUser: boolean;
+  };
+}
+
+const StyledMessageBubble = styled(Paper, {
+  shouldForwardProp: (prop) => prop !== 'ownerState'
+})<StyledMessageBubbleProps>(({ theme, ownerState }) => ({
   padding: theme.spacing(2),
   maxWidth: '70%',
   width: 'fit-content',
   marginBottom: theme.spacing(1),
-  backgroundColor: isUser ? theme.palette.primary.main : theme.palette.mode === 'dark' ? 'rgba(18, 18, 24, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-  color: isUser ? theme.palette.primary.contrastText : theme.palette.text.primary,
+  backgroundColor: ownerState.isUser ? theme.palette.primary.main : theme.palette.mode === 'dark' ? 'rgba(18, 18, 24, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+  color: ownerState.isUser ? theme.palette.primary.contrastText : theme.palette.text.primary,
   borderRadius: '20px',
-  boxShadow: isUser 
+  boxShadow: ownerState.isUser 
     ? `0 0 20px ${alpha(theme.palette.primary.main, 0.4)}, inset 0 0 10px ${alpha(theme.palette.primary.light, 0.3)}`
     : theme.palette.mode === 'dark'
       ? `0 0 20px ${alpha('#FFB703', 0.1)}, inset 0 0 10px ${alpha('#FFB703', 0.05)}`
@@ -91,13 +122,24 @@ const MessageBubble = styled(Paper)<{ isUser: boolean }>(({ theme, isUser }) => 
   border: 'none',
   transition: 'all 0.3s ease',
   '&:hover': {
-    boxShadow: isUser 
+    boxShadow: ownerState.isUser 
       ? `0 0 30px ${alpha(theme.palette.primary.main, 0.5)}, inset 0 0 20px ${alpha(theme.palette.primary.light, 0.4)}`
       : theme.palette.mode === 'dark'
         ? `0 0 25px ${alpha('#FFB703', 0.15)}, inset 0 0 15px ${alpha('#FFB703', 0.08)}`
         : `0 0 25px ${alpha(theme.palette.primary.main, 0.15)}, inset 0 0 15px ${alpha(theme.palette.primary.light, 0.08)}`
   }
 }));
+
+interface MessageBubbleProps {
+  isUser: boolean;
+  children: React.ReactNode;
+}
+
+const CustomMessageBubble: React.FC<MessageBubbleProps> = ({ isUser, children }) => (
+  <StyledMessageBubble ownerState={{ isUser }}>
+    {children}
+  </StyledMessageBubble>
+);
 
 const InputContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2, 3),
@@ -133,6 +175,77 @@ interface ChatInterfaceProps {
   sessionId: string;
 }
 
+// Use relative path by default, or environment variable if specified
+const API_BASE_URL = '/api';
+
+const getFortuneTelling = async (
+  text: string,
+  method: string = 'crystal',
+  language: string = 'en',
+  sessionId: string,
+  spreadType?: TarotSpreadType
+): Promise<string> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/fortune`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        method,
+        language,
+        sessionId,
+        spreadType,
+        max_tokens: 500,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Network error' }));
+      throw new Error(error.error || 'Failed to get fortune telling');
+    }
+
+    const data = await response.json();
+    return data.response;
+  } catch (error) {
+    console.error('Error getting fortune telling:', error);
+    throw error;
+  }
+};
+
+const analyzeImage = async (
+  imageUrl: string,
+  method: string = 'crystal',
+  language: string = 'en'
+): Promise<string> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/analyze-image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        imageUrl,
+        method,
+        language,
+        max_tokens: 500,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Network error' }));
+      throw new Error(error.error || 'Failed to analyze image');
+    }
+
+    const data = await response.json();
+    return data.response;
+  } catch (error) {
+    console.error('Error analyzing image:', error);
+    throw error;
+  }
+};
+
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   messages,
   method,
@@ -140,6 +253,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onUploadImage,
   sessionId,
 }) => {
+  const theme = useTheme();
   const { language } = useLanguage();
   const t = translations[language];
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -156,20 +270,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Get the spread name if it's a tarot method
+  const getMethodTitle = () => {
+    if (method.id === 'tarot' && method.spreadType) {
+      return t.tarot.spreads[method.spreadType].name;
+    }
+    return t.methods[method.id as keyof typeof t.methods].name;
+  };
+
   const handleSend = async () => {
-    if (input.trim()) {
-      const message = input.trim();
-      setInput('');
-      console.log('Sending message:', message);
-      onSendMessage(message);
-      
-      try {
-        const response = await getFortuneTelling(message, method.id, language, sessionId);
-        onSendMessage(response, 'fortune-teller');
-      } catch (error) {
-        console.error('Failed to get fortune telling:', error);
-        onSendMessage(t.chat.readingError, 'fortune-teller');
-      }
+    if (!input.trim()) return;
+
+    const userMessage = input;
+    setInput('');
+    onSendMessage(userMessage, 'user');
+
+    try {
+      const response = await getFortuneTelling(
+        userMessage,
+        method.id,
+        language,
+        sessionId,
+        method.spreadType
+      );
+      onSendMessage(response, 'fortune-teller');
+    } catch (error) {
+      console.error('Error:', error);
+      onSendMessage(t.chat.readingError, 'fortune-teller');
     }
   };
 
@@ -243,7 +370,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           {getMethodIcon(method.icon)}
         </Box>
         <Box>
-          <Typography variant="h6">{method.name}</Typography>
+          <Typography variant="h6">{getMethodTitle()}</Typography>
           <Typography variant="body2" color="text.secondary">
             {method.description}
           </Typography>
@@ -252,7 +379,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <MessagesContainer ref={messagesContainerRef}>
         <AnimatePresence>
           {messages.map((message) => (
-            <MessageWrapper
+            <CustomMessageWrapper
               key={message.id}
               isUser={message.sender === 'user'}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -260,7 +387,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             >
-              <MessageBubble isUser={message.sender === 'user'}>
+              <CustomMessageBubble isUser={message.sender === 'user'}>
                 <Typography variant="body1">{message.content}</Typography>
                 {message.image && (
                   <ImageContainer>
@@ -275,8 +402,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     />
                   </ImageContainer>
                 )}
-              </MessageBubble>
-            </MessageWrapper>
+              </CustomMessageBubble>
+            </CustomMessageWrapper>
           ))}
         </AnimatePresence>
       </MessagesContainer>
@@ -289,7 +416,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={t.chat.placeholder.replace('{method}', method.name)}
+            placeholder={t.chat.placeholder.replace('{method}', getMethodTitle())}
             variant="outlined"
             size="small"
             sx={{

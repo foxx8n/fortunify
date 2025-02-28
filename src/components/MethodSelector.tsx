@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -18,6 +18,8 @@ import { motion } from 'framer-motion';
 import { mysticalGradients } from '../styles/gradients';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
+import { TarotSelector } from './TarotSelector';
+import { TarotSpreadType } from '../types/tarot';
 
 const MotionCard = motion(Card);
 
@@ -90,14 +92,31 @@ const MethodSelector: React.FC<MethodSelectorProps> = ({
   const { language } = useLanguage();
   const dialogRef = useRef<HTMLDivElement>(null);
   const t = translations[language];
+  const [isTarotSelectorOpen, setIsTarotSelectorOpen] = useState(false);
 
   const handleMethodSelect = (method: FortuneMethod) => {
     console.log('Method selected:', method);
+    if (method.id === 'tarot') {
+      setIsTarotSelectorOpen(true);
+    } else {
+      onSelect({
+        ...method,
+        name: t.methods[method.id as keyof typeof t.methods].name,
+        description: t.methods[method.id as keyof typeof t.methods].description,
+      });
+      onClose();
+    }
+  };
+
+  const handleTarotSpreadSelect = (spreadType: TarotSpreadType) => {
+    const tarotMethod = FORTUNE_METHODS.find(m => m.id === 'tarot')!;
     onSelect({
-      ...method,
-      name: t.methods[method.id as keyof typeof t.methods].name,
-      description: t.methods[method.id as keyof typeof t.methods].description,
+      ...tarotMethod,
+      name: t.methods.tarot.name,
+      description: t.methods.tarot.description,
+      spreadType // Add the selected spread type to the method
     });
+    setIsTarotSelectorOpen(false);
     onClose();
   };
 
@@ -107,113 +126,121 @@ const MethodSelector: React.FC<MethodSelectorProps> = ({
   };
 
   return (
-    <StyledDialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      onClick={(e) => {
-        e.stopPropagation();
-      }}
-      sx={{
-        '& .MuiDialog-container': {
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-      }}
-    >
-      <DialogTitle 
-        onClick={(e) => e.stopPropagation()}
-        sx={{ 
-          textAlign: 'center', 
-          pb: 3,
-          background: mysticalGradients.radial(theme.palette.mode),
+    <>
+      <StyledDialog
+        open={open}
+        onClose={onClose}
+        maxWidth="md"
+        fullWidth
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+        sx={{
+          '& .MuiDialog-container': {
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
         }}
       >
-        <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
-          {t.ui.selectMethod}
-        </Typography>
-      </DialogTitle>
-      <DialogContent 
-        ref={dialogRef}
-        onClick={(e) => e.stopPropagation()}
-        sx={{ pb: 4 }}
-      >
-        <Grid container spacing={3} sx={{ mt: 1 }}>
-          {FORTUNE_METHODS.map((method) => {
-            const localizedMethod = t.methods[method.id as keyof typeof t.methods];
-            return (
-              <Grid item xs={12} sm={6} md={4} key={method.id}>
-                <MethodCard
-                  whileHover={{ 
-                    scale: 1.05,
-                    boxShadow: `0 0 20px ${theme.palette.primary.main}40`,
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: 'spring', stiffness: 300 }}
-                >
-                  <CardActionArea
-                    component="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleMethodSelect({
-                        ...method,
-                        name: localizedMethod.name,
-                        description: localizedMethod.description,
-                      });
+        <DialogTitle 
+          onClick={(e) => e.stopPropagation()}
+          sx={{ 
+            textAlign: 'center', 
+            pb: 3,
+            background: mysticalGradients.radial(theme.palette.mode),
+          }}
+        >
+          <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
+            {t.ui.selectMethod}
+          </Typography>
+        </DialogTitle>
+        <DialogContent 
+          ref={dialogRef}
+          onClick={(e) => e.stopPropagation()}
+          sx={{ pb: 4 }}
+        >
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            {FORTUNE_METHODS.map((method) => {
+              const localizedMethod = t.methods[method.id as keyof typeof t.methods];
+              return (
+                <Grid item xs={12} sm={6} md={4} key={method.id}>
+                  <MethodCard
+                    whileHover={{ 
+                      scale: 1.05,
+                      boxShadow: `0 0 20px ${theme.palette.primary.main}40`,
                     }}
-                    sx={{ 
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      position: 'relative',
-                      zIndex: 2,
-                      border: 'none',
-                      background: 'none',
-                      width: '100%',
-                      padding: 0,
-                      '&:hover': {
-                        backgroundColor: 'transparent',
-                      },
-                    }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 300 }}
                   >
-                    <CardContent sx={{ width: '100%', p: 3, position: 'relative', zIndex: 3 }}>
-                      <Box
-                        sx={{
-                          width: 64,
-                          height: 64,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderRadius: '50%',
-                          backgroundColor: `${theme.palette.primary.main}20`,
-                          mb: 2,
-                        }}
-                      >
-                        {getIcon(method.icon)}
-                      </Box>
-                      <Typography variant="h6" component="h3" sx={{ fontWeight: 500, mb: 1 }}>
-                        {localizedMethod.name}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ flex: 1 }}
-                      >
-                        {localizedMethod.description}
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </MethodCard>
-              </Grid>
-            );
-          })}
-        </Grid>
-      </DialogContent>
-    </StyledDialog>
+                    <CardActionArea
+                      component="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleMethodSelect({
+                          ...method,
+                          name: localizedMethod.name,
+                          description: localizedMethod.description,
+                        });
+                      }}
+                      sx={{ 
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        zIndex: 2,
+                        border: 'none',
+                        background: 'none',
+                        width: '100%',
+                        padding: 0,
+                        '&:hover': {
+                          backgroundColor: 'transparent',
+                        },
+                      }}
+                    >
+                      <CardContent sx={{ width: '100%', p: 3, position: 'relative', zIndex: 3 }}>
+                        <Box
+                          sx={{
+                            width: 64,
+                            height: 64,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '50%',
+                            backgroundColor: `${theme.palette.primary.main}20`,
+                            mb: 2,
+                          }}
+                        >
+                          {getIcon(method.icon)}
+                        </Box>
+                        <Typography variant="h6" component="h3" sx={{ fontWeight: 500, mb: 1 }}>
+                          {localizedMethod.name}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ flex: 1 }}
+                        >
+                          {localizedMethod.description}
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </MethodCard>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </DialogContent>
+      </StyledDialog>
+
+      <TarotSelector
+        open={isTarotSelectorOpen}
+        onClose={() => setIsTarotSelectorOpen(false)}
+        onSelectSpread={handleTarotSpreadSelect}
+      />
+    </>
   );
 };
 

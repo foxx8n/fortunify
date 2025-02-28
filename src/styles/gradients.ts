@@ -18,6 +18,16 @@ export const mysticalGradients = {
   
   hover: (mode: PaletteMode) =>
     mode === 'dark'
-      ? 'linear-gradient(135deg, rgba(123, 44, 191, 0.2) 0%, rgba(255, 183, 3, 0.1) 100%)'
+      ? 'linear-gradient(135deg, rgba(123, 44, 191, 0.2) 0%, rgba(123, 44, 191, 0.1) 100%)'
       : 'linear-gradient(135deg, rgba(123, 44, 191, 0.15) 0%, rgba(255, 183, 3, 0.15) 100%)',
+  
+  card: (mode: PaletteMode) =>
+    mode === 'dark'
+      ? 'linear-gradient(135deg, rgba(123, 44, 191, 0.3) 0%, rgba(123, 44, 191, 0.1) 100%)'
+      : 'linear-gradient(135deg, rgba(123, 44, 191, 0.2) 0%, rgba(255, 183, 3, 0.2) 100%)',
+  
+  title: (mode: PaletteMode) =>
+    mode === 'dark'
+      ? 'linear-gradient(135deg, rgba(123, 44, 191, 0.2) 0%, rgba(0, 0, 0, 0) 100%)'
+      : 'linear-gradient(135deg, rgba(123, 44, 191, 0.1) 0%, rgba(255, 255, 255, 0) 100%)',
 }; 

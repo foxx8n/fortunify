@@ -1,8 +1,11 @@
+import { TarotSpreadType } from './tarot';
+
 export type FortuneMethod = {
   id: string;
   name: string;
   description: string;
   icon: string; // Material-UI icon name
+  spreadType?: TarotSpreadType; // Optional property for tarot spreads
 };
 
 export interface Message {

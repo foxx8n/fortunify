@@ -81,7 +81,7 @@ const ThemedApp = () => {
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [isMethodSelectorOpen, setIsMethodSelectorOpen] = useState(false);
+  const [isMethodSelectorOpen, setIsMethodSelectorOpen] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const t = translations[language];
@@ -241,95 +241,21 @@ const ThemedApp = () => {
               sx={{
                 height: '100%',
                 display: 'flex',
-                alignItems: 'flex-start',
+                alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: 'background.default',
-                color: 'text.secondary',
                 background: mysticalGradients.background(mode),
-                flexDirection: 'column',
-                gap: 2,
-                position: 'relative',
-                zIndex: 0,
-                pl: '30%',
-                pr: '30%',
-                pt: 10,
-                overflow: 'auto',
-                overscrollBehavior: 'none',
               }}
             >
-              {!isSidebarOpen && (
-                <IconButton
-                  onClick={() => setIsSidebarOpen(true)}
-                  sx={{
-                    position: 'fixed',
-                    top: 8,
-                    left: 8,
-                    zIndex: 1200,
-                    backgroundColor: 'background.paper',
-                    boxShadow: 1,
-                    width: 40,
-                    height: 40,
-                    '&:hover': {
-                      backgroundColor: 'background.paper',
-                    },
-                  }}
-                  color="primary"
-                >
-                  <MenuIcon />
-                </IconButton>
-              )}
-              <Box sx={{ textAlign: 'center', width: '100%', mb: 4 }}>
-                <Typography variant="h4" sx={{ fontWeight: 600, mb: 2 }}>
-                  {t.welcome.title}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  {t.welcome.subtitle}
-                </Typography>
-              </Box>
-              <MethodGrid ref={gridRef}>
-                {FORTUNE_METHODS.map((method) => {
-                  const localizedMethod = t.methods[method.id as keyof typeof t.methods];
-                  return (
-                    <MethodCard
-                      key={method.id}
-                      onClick={() => handleMethodSelect({
-                        ...method,
-                        name: localizedMethod.name,
-                        description: localizedMethod.description,
-                      })}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      layout
-                      transition={{ 
-                        layout: { duration: 0.3 },
-                        scale: { type: "spring", stiffness: 300, damping: 25 }
-                      }}
-                    >
-                      <IconWrapper>
-                        {React.createElement(
-                          (Icons as any)[method.icon],
-                          { color: 'primary', fontSize: 'large' }
-                        )}
-                      </IconWrapper>
-                      <Typography variant="h6" component="h3" sx={{ fontWeight: 500 }}>
-                        {localizedMethod.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {localizedMethod.description}
-                      </Typography>
-                    </MethodCard>
-                  );
-                })}
-              </MethodGrid>
+              <MethodSelector
+                open={isMethodSelectorOpen}
+                onClose={() => setIsMethodSelectorOpen(false)}
+                onSelect={handleMethodSelect}
+              />
             </Box>
           )}
         </Box>
       </Box>
-      <MethodSelector
-        open={isMethodSelectorOpen}
-        onClose={() => setIsMethodSelectorOpen(false)}
-        onSelect={handleMethodSelect}
-      />
     </MuiThemeProvider>
   );
 };
