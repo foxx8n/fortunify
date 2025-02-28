@@ -37,26 +37,74 @@ export const translations = {
         single_card: {
           name: 'Single Card',
           description: 'A simple yet powerful spread for quick guidance or daily insight.',
+          positions: {
+            message: 'The Message',
+          }
         },
         three_card: {
           name: 'Three Card Spread',
           description: 'Past, Present, and Future spread for temporal insight.',
+          positions: {
+            past: 'Past',
+            present: 'Present',
+            future: 'Future',
+          }
         },
         celtic_cross: {
           name: 'Celtic Cross',
           description: 'A comprehensive spread for deep insight into complex situations.',
+          positions: {
+            present: 'Present',
+            challenge: 'Challenge',
+            foundation: 'Foundation',
+            past: 'Recent Past',
+            potential: 'Potential',
+            future: 'Near Future',
+            self: 'Self',
+            environment: 'Environment',
+            hopes_fears: 'Hopes/Fears',
+            outcome: 'Outcome',
+          }
         },
         horseshoe: {
           name: 'Horseshoe Spread',
           description: 'A seven-card spread focusing on problem-solving.',
+          positions: {
+            past: 'Past',
+            present: 'Present',
+            hidden: 'Hidden Influences',
+            obstacles: 'Obstacles',
+            external: 'External Influences',
+            guidance: 'Guidance',
+            outcome: 'Outcome',
+          }
         },
         pentagram: {
           name: 'Pentagram Spread',
           description: 'A five-card spread representing the elements and spirit.',
+          positions: {
+            spirit: 'Spirit',
+            fire: 'Fire',
+            water: 'Water',
+            air: 'Air',
+            earth: 'Earth',
+          }
         },
         tree_of_life: {
           name: 'Tree of Life',
           description: 'A spiritual spread based on the Kabbalah Tree of Life.',
+          positions: {
+            crown: 'Crown',
+            wisdom: 'Wisdom',
+            understanding: 'Understanding',
+            mercy: 'Mercy',
+            severity: 'Severity',
+            beauty: 'Beauty',
+            victory: 'Victory',
+            splendor: 'Splendor',
+            foundation: 'Foundation',
+            kingdom: 'Kingdom',
+          }
         },
       },
     },
@@ -129,26 +177,74 @@ export const translations = {
         single_card: {
           name: 'Tek Kart',
           description: 'Hızlı rehberlik veya günlük içgörü için basit ama güçlü bir dizilim.',
+          positions: {
+            message: 'Mesaj',
+          }
         },
         three_card: {
           name: 'Üç Kart Dizilimi',
           description: 'Geçmiş, Şimdi ve Gelecek için zamansal içgörü.',
+          positions: {
+            past: 'Geçmiş',
+            present: 'Şimdi',
+            future: 'Gelecek',
+          }
         },
         celtic_cross: {
           name: 'Kelt Haçı',
           description: 'Karmaşık durumlar için kapsamlı bir içgörü dizilimi.',
+          positions: {
+            present: 'Şimdiki Durum',
+            challenge: 'Zorluk',
+            foundation: 'Temel',
+            past: 'Yakın Geçmiş',
+            potential: 'Potansiyel',
+            future: 'Yakın Gelecek',
+            self: 'Kendiniz',
+            environment: 'Çevre',
+            hopes_fears: 'Umutlar/Korkular',
+            outcome: 'Sonuç',
+          }
         },
         horseshoe: {
-          name: 'Nal Dizilimi',
+          name: 'At Nalı Dizilimi',
           description: 'Problem çözmeye odaklanan yedi kartlık dizilim.',
+          positions: {
+            past: 'Geçmiş',
+            present: 'Şimdi',
+            hidden: 'Gizli Etkiler',
+            obstacles: 'Engeller',
+            external: 'Dış Etkiler',
+            guidance: 'Rehberlik',
+            outcome: 'Sonuç',
+          }
         },
         pentagram: {
           name: 'Pentagram Dizilimi',
           description: 'Elementleri ve ruhu temsil eden beş kartlık dizilim.',
+          positions: {
+            spirit: 'Ruh',
+            fire: 'Ateş',
+            water: 'Su',
+            air: 'Hava',
+            earth: 'Toprak',
+          }
         },
         tree_of_life: {
           name: 'Hayat Ağacı',
           description: 'Kabala Hayat Ağacına dayalı spiritüel dizilim.',
+          positions: {
+            crown: 'Taç',
+            wisdom: 'Bilgelik',
+            understanding: 'Anlayış',
+            mercy: 'Merhamet',
+            severity: 'Disiplin',
+            beauty: 'Güzellik',
+            victory: 'Zafer',
+            splendor: 'İhtişam',
+            foundation: 'Temel',
+            kingdom: 'Krallık',
+          }
         },
       },
     },

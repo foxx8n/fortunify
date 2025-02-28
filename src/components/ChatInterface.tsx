@@ -21,6 +21,7 @@ import { translations } from '../translations';
 import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
 import { TarotSpreadType } from '../types/tarot';
+import TarotSpreadDisplay from './TarotSpreadDisplay';
 
 const ChatContainer = styled(Box)(({ theme }) => ({
   height: '100vh',
@@ -246,6 +247,74 @@ const analyzeImage = async (
   }
 };
 
+const isTarotReading = (content: string, language: string = 'en'): boolean => {
+  // Common tarot reading indicators in English
+  const englishIndicators = [
+    "*I select",
+    "*I draw",
+    "*I place",
+    "*I arrange",
+    "*I lay out",
+    "the cards reveal",
+    "the tarot shows",
+    "from my ancient deck",
+    "the cards speak",
+    "in this spread",
+    "this card represents",
+    "this position shows",
+    "in the tarot spread"
+  ];
+
+  // Common tarot reading indicators in Turkish
+  const turkishIndicators = [
+    "*Bir kart seçiyorum",
+    "*Kartı çekiyorum",
+    "*Kartları diziyorum",
+    "*Kartları yerleştiriyorum",
+    "kartlar gösteriyor",
+    "tarot gösteriyor",
+    "kadim destemden",
+    "kartlar konuşuyor",
+    "bu dizilimde",
+    "bu kart temsil ediyor",
+    "bu pozisyon gösteriyor",
+    "tarot diziliminde"
+  ];
+
+  // Select indicators based on language
+  const indicators = language === 'tr' ? turkishIndicators : englishIndicators;
+
+  // Check for any of the indicators
+  const hasIndicator = indicators.some(indicator => 
+    content.toLowerCase().includes(indicator.toLowerCase())
+  );
+
+  // Additional checks for tarot-specific patterns
+  const hasTarotPatterns = (
+    content.includes('**') || // Position markers
+    /\*[^*]+\*/.test(content) || // Action descriptions between asterisks
+    content.toLowerCase().includes('tarot') ||
+    (language === 'tr' && content.toLowerCase().includes('kart'))
+  );
+
+  // Check for mystical action patterns
+  const hasMysticalActions = (
+    content.match(/\*[^*]+\*/) !== null || // Any text between asterisks
+    content.includes('...') // Ellipsis indicating mystical pauses
+  );
+
+  // Return true if we have both an indicator and either tarot patterns or mystical actions
+  return hasIndicator && (hasTarotPatterns || hasMysticalActions);
+};
+
+const isTarotResponse = (message: Message, method: FortuneMethod, language: string): boolean => {
+  return !message.image && 
+         message.sender === 'fortune-teller' && 
+         method.id === 'tarot' && 
+         !!method.spreadType &&
+         isTarotReading(message.content, language);
+};
+
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   messages,
   method,
@@ -378,33 +447,49 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </MethodHeader>
       <MessagesContainer ref={messagesContainerRef}>
         <AnimatePresence>
-          {messages.map((message) => (
-            <CustomMessageWrapper
-              key={message.id}
-              isUser={message.sender === 'user'}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-            >
-              <CustomMessageBubble isUser={message.sender === 'user'}>
-                <Typography variant="body1">{message.content}</Typography>
-                {message.image && (
-                  <ImageContainer>
-                    <img
-                      src={message.image.url}
-                      alt="Uploaded"
-                      style={{
-                        maxHeight: '300px',
-                        objectFit: 'cover',
-                        width: '100%',
-                      }}
-                    />
-                  </ImageContainer>
-                )}
-              </CustomMessageBubble>
-            </CustomMessageWrapper>
-          ))}
+          {messages.map((message) => {
+            const isTarot = isTarotResponse(message, method, language);
+            return isTarot ? (
+              <Box
+                key={message.id}
+                sx={{
+                  width: '100%',
+                  my: 2
+                }}
+              >
+                <TarotSpreadDisplay
+                  content={message.content}
+                  spreadType={method.spreadType!}
+                />
+              </Box>
+            ) : (
+              <CustomMessageWrapper
+                key={message.id}
+                isUser={message.sender === 'user'}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+              >
+                <CustomMessageBubble isUser={message.sender === 'user'}>
+                  <Typography variant="body1">{message.content}</Typography>
+                  {message.image && (
+                    <ImageContainer>
+                      <img
+                        src={message.image.url}
+                        alt="Uploaded"
+                        style={{
+                          maxHeight: '300px',
+                          objectFit: 'cover',
+                          width: '100%',
+                        }}
+                      />
+                    </ImageContainer>
+                  )}
+                </CustomMessageBubble>
+              </CustomMessageWrapper>
+            );
+          })}
         </AnimatePresence>
       </MessagesContainer>
       <InputContainer>

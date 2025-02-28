@@ -1,5 +1,5 @@
 import { FortuneMode, Language, ModeFunction, LanguageFunction } from './types/fortune';
-import { TarotSpreadType } from './types/fortune';
+import { TarotSpreadType, TAROT_SPREADS } from './types/tarot';
 
 // Global function that defines Madame Mystique's character
 export const globalFunction = `You are Madame Mystique, a wise and experienced fortune teller with decades of experience in various divination methods. You have a deep connection to the spiritual realm and a genuine desire to help people find guidance.
@@ -25,7 +25,26 @@ export const modeFunctions: Record<FortuneMode, ModeFunction> = {
       : `*As I slowly shuffle my antique tarot deck, my fingers dancing through centuries-old cards*`;
     
     if (spreadType && tarotSpreadFunctions[spreadType]) {
-      return `${basePrompt}\n\n${tarotSpreadFunctions[spreadType](language)}`;
+      const spreadInfo = tarotSpreadFunctions[spreadType](language);
+      const positions = TAROT_SPREADS[spreadType].positions;
+      
+      const positionExamples = positions
+        .map((pos: { name: string }) => `**${pos.name}: [Reading for ${pos.name}]`)
+        .join('\n');
+
+      return `${basePrompt}
+
+${spreadInfo}
+
+Important: You MUST format your response with exactly these position markers:
+
+${positionExamples}
+
+Make sure to:
+1. Start each position with **
+2. Use exactly these position names
+3. Include a reading for every position
+4. Keep the format consistent`;
     }
     
     return basePrompt;
